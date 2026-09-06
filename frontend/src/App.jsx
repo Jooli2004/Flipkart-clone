@@ -61,29 +61,23 @@ function App() {
 
   /* CATEGORY */
 
-  const [selectedCategory, setSelectedCategory] =
-    useState("All");
+  const [selectedCategory, setSelectedCategory] = useState("All");
 
   /* PRODUCT DETAILS */
 
-  const [selectedProduct, setSelectedProduct] =
-    useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
 
   /* MESSAGE */
 
-  const [orderMessage, setOrderMessage] =
-    useState("");
+  const [orderMessage, setOrderMessage] = useState("");
 
   /* CHECKOUT */
 
-  const [showCheckout, setShowCheckout] =
-    useState(false);
+  const [showCheckout, setShowCheckout] = useState(false);
 
-  const [checkoutType, setCheckoutType] =
-    useState(null);
+  const [checkoutType, setCheckoutType] = useState(null);
 
-  const [paymentMethod, setPaymentMethod] =
-    useState("");
+  const [paymentMethod, setPaymentMethod] = useState("");
 
   /* ADDRESS */
 
@@ -112,8 +106,14 @@ function App() {
   /* FETCH PRODUCTS */
 
   useEffect(() => {
-    fetch("http://localhost:5000/products")
-      .then((response) => response.json())
+    fetch("https://flipkart-clone-backend-q6oy.onrender.com/products")
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Failed to fetch products");
+        }
+
+        return response.json();
+      })
       .then((data) => {
         const imageMap = {
           "Apple iPhone 15": appleIphone15,
@@ -129,7 +129,7 @@ function App() {
           "Men's T-Shirt": mensTshirt,
           "Women's Handbag": womensHandbag,
           "Laptop Backpack": laptopBackpack,
-          "Sunglasses": sunglasses,
+          Sunglasses: sunglasses,
           "Premium Perfume": premiumPerfume,
           "Skin Care Set": skinCareSet,
           "Modern Sofa": modernSofa,
@@ -178,7 +178,7 @@ function App() {
           "Laptop Backpack":
             "Laptop Backpack provides organized storage for your laptop and daily essentials. It is suitable for college, office, travel and everyday use.",
 
-          "Sunglasses":
+          Sunglasses:
             "Sunglasses provide a stylish look and comfortable protection from bright sunlight. They are suitable for travel, outdoor activities and everyday use.",
 
           "Premium Perfume":
@@ -200,62 +200,55 @@ function App() {
             "Wireless Keyboard provides convenient typing without cable connections. It is suitable for laptops, computers, office work, studying and everyday use.",
         };
 
-        const productsWithImages = data.map(
-          (product) => ({
-            ...product,
-            image: imageMap[product.name],
-            description:
-              descriptionMap[product.name] ||
-              "This is a high-quality product designed to provide reliable performance and a good user experience.",
-          })
-        );
+        const productsWithImages = data.map((product) => ({
+          ...product,
+          image: imageMap[product.name],
+          description:
+            descriptionMap[product.name] ||
+            "This is a high-quality product designed to provide reliable performance and a good user experience.",
+        }));
 
         setProducts(productsWithImages);
       })
       .catch((error) => {
-        console.error(
-          "Error fetching products:",
-          error
-        );
+        console.error("Error fetching products:", error);
       });
   }, []);
 
   /* PRICE */
 
   const getPriceNumber = (price) => {
+    if (typeof price === "number") {
+      return price;
+    }
+
     return Number(
-      price
+      String(price)
         .replace("₹", "")
         .replace(/,/g, "")
+        .trim()
     );
   };
 
   /* FILTER PRODUCTS */
 
-  const filteredProducts = products.filter(
-    (product) => {
-      const matchesSearch =
-        product.name
-          .toLowerCase()
-          .includes(search.toLowerCase());
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch = product.name
+      .toLowerCase()
+      .includes(search.toLowerCase());
 
-      const matchesCategory =
-        selectedCategory === "All" ||
-        product.category === selectedCategory;
+    const matchesCategory =
+      selectedCategory === "All" ||
+      product.category === selectedCategory;
 
-      return (
-        matchesSearch &&
-        matchesCategory
-      );
-    }
-  );
+    return matchesSearch && matchesCategory;
+  });
 
   /* ADD TO CART */
 
   const addToCart = (product) => {
     const existingProduct = cart.find(
-      (item) =>
-        item.name === product.name
+      (item) => item.name === product.name
     );
 
     if (existingProduct) {
@@ -264,8 +257,7 @@ function App() {
           item.name === product.name
             ? {
                 ...item,
-                quantity:
-                  item.quantity + 1,
+                quantity: item.quantity + 1,
               }
             : item
         )
@@ -283,29 +275,25 @@ function App() {
 
   /* QUANTITY */
 
-  const increaseQuantity = (
-    productName
-  ) => {
+  const increaseQuantity = (productName) => {
     setCart(
       cart.map((item) =>
         item.name === productName
           ? {
               ...item,
-              quantity:
-                item.quantity + 1,
+              quantity: item.quantity + 1,
             }
           : item
       )
     );
   };
 
-  const decreaseQuantity = (
-    productName
-  ) => {
+  const decreaseQuantity = (productName) => {
     const product = cart.find(
-      (item) =>
-        item.name === productName
+      (item) => item.name === productName
     );
+
+    if (!product) return;
 
     if (product.quantity === 1) {
       removeFromCart(productName);
@@ -315,8 +303,7 @@ function App() {
           item.name === productName
             ? {
                 ...item,
-                quantity:
-                  item.quantity - 1,
+                quantity: item.quantity - 1,
               }
             : item
         )
@@ -324,13 +311,10 @@ function App() {
     }
   };
 
-  const removeFromCart = (
-    productName
-  ) => {
+  const removeFromCart = (productName) => {
     setCart(
       cart.filter(
-        (item) =>
-          item.name !== productName
+        (item) => item.name !== productName
       )
     );
   };
@@ -353,19 +337,15 @@ function App() {
 
   /* WISHLIST */
 
-  const toggleWishlist = (
-    product
-  ) => {
+  const toggleWishlist = (product) => {
     const exists = wishlist.some(
-      (item) =>
-        item.name === product.name
+      (item) => item.name === product.name
     );
 
     if (exists) {
       setWishlist(
         wishlist.filter(
-          (item) =>
-            item.name !== product.name
+          (item) => item.name !== product.name
         )
       );
     } else {
@@ -376,22 +356,16 @@ function App() {
     }
   };
 
-  const isInWishlist = (
-    productName
-  ) => {
+  const isInWishlist = (productName) => {
     return wishlist.some(
-      (item) =>
-        item.name === productName
+      (item) => item.name === productName
     );
   };
 
-  const removeFromWishlist = (
-    productName
-  ) => {
+  const removeFromWishlist = (productName) => {
     setWishlist(
       wishlist.filter(
-        (item) =>
-          item.name !== productName
+        (item) => item.name !== productName
       )
     );
   };
@@ -412,9 +386,7 @@ function App() {
       setEmail("");
       setPassword("");
     } else {
-      alert(
-        "Please enter email and password"
-      );
+      alert("Please enter email and password");
     }
   };
 
@@ -451,9 +423,7 @@ function App() {
     }
 
     if (cart.length === 0) {
-      alert(
-        "Your cart is empty"
-      );
+      alert("Your cart is empty");
       return;
     }
 
@@ -470,8 +440,7 @@ function App() {
   /* ADDRESS */
 
   const handleAddressChange = (e) => {
-    const { name, value } =
-      e.target;
+    const { name, value } = e.target;
 
     setAddress({
       ...address,
@@ -488,14 +457,13 @@ function App() {
       address.city.trim() === "" ||
       address.state.trim() === ""
     ) {
-      alert(
-        "Please fill all address details"
-      );
+      alert("Please fill all address details");
       return;
     }
 
     if (
-      address.mobile.length !== 10
+      address.mobile.length !== 10 ||
+      !/^\d+$/.test(address.mobile)
     ) {
       alert(
         "Please enter a valid 10 digit mobile number"
@@ -504,7 +472,8 @@ function App() {
     }
 
     if (
-      address.pincode.length !== 6
+      address.pincode.length !== 6 ||
+      !/^\d+$/.test(address.pincode)
     ) {
       alert(
         "Please enter a valid 6 digit pincode"
@@ -522,9 +491,7 @@ function App() {
 
   const confirmPayment = () => {
     if (paymentMethod === "") {
-      alert(
-        "Please select a payment method"
-      );
+      alert("Please select a payment method");
       return;
     }
 
@@ -532,17 +499,13 @@ function App() {
     let finalTotal = 0;
     let finalItems = 0;
 
-    if (
-      checkoutType.type === "cart"
-    ) {
+    if (checkoutType.type === "cart") {
       orderItems = [...cart];
       finalTotal = totalPrice;
       finalItems = totalItems;
     }
 
-    if (
-      checkoutType.type === "buyNow"
-    ) {
+    if (checkoutType.type === "buyNow") {
       orderItems = [
         {
           ...checkoutType.product,
@@ -550,10 +513,9 @@ function App() {
         },
       ];
 
-      finalTotal =
-        getPriceNumber(
-          checkoutType.product.price
-        );
+      finalTotal = getPriceNumber(
+        checkoutType.product.price
+      );
 
       finalItems = 1;
     }
@@ -576,29 +538,24 @@ function App() {
           ? "Cash on Delivery"
           : "Online Payment",
 
-      date:
-        new Date().toLocaleDateString(
-          "en-IN",
-          {
-            day: "numeric",
-            month: "short",
-            year: "numeric",
-          }
-        ),
+      date: new Date().toLocaleDateString(
+        "en-IN",
+        {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        }
+      ),
 
       status: "Order Placed",
     };
 
-    setOrders(
-      (previousOrders) => [
-        newOrder,
-        ...previousOrders,
-      ]
-    );
+    setOrders((previousOrders) => [
+      newOrder,
+      ...previousOrders,
+    ]);
 
-    if (
-      checkoutType.type === "cart"
-    ) {
+    if (checkoutType.type === "cart") {
       setCart([]);
     }
 
@@ -623,15 +580,12 @@ function App() {
     }, 4000);
   };
 
-  /* CANCEL ORDER - COMPLETELY REMOVE ORDER */
+  /* CANCEL ORDER */
 
-  const cancelOrder = (
-    orderId
-  ) => {
+  const cancelOrder = (orderId) => {
     setOrders(
       orders.filter(
-        (order) =>
-          order.id !== orderId
+        (order) => order.id !== orderId
       )
     );
 
@@ -686,9 +640,7 @@ function App() {
         <button
           className="wishlist-nav"
           onClick={() => {
-            setShowWishlist(
-              !showWishlist
-            );
+            setShowWishlist(!showWishlist);
             setShowCart(false);
             setShowOrders(false);
           }}
@@ -699,9 +651,7 @@ function App() {
         <button
           className="orders-nav"
           onClick={() => {
-            setShowOrders(
-              !showOrders
-            );
+            setShowOrders(!showOrders);
             setShowCart(false);
             setShowWishlist(false);
           }}
@@ -763,9 +713,7 @@ function App() {
 
             <div className="login-right">
 
-              <form
-                onSubmit={handleLogin}
-              >
+              <form onSubmit={handleLogin}>
 
                 <input
                   type="email"
@@ -781,9 +729,7 @@ function App() {
                   placeholder="Enter Password"
                   value={password}
                   onChange={(e) =>
-                    setPassword(
-                      e.target.value
-                    )
+                    setPassword(e.target.value)
                   }
                 />
 
@@ -823,7 +769,6 @@ function App() {
             {checkoutType?.step ===
               "address" && (
               <>
-
                 <h2 className="checkout-title">
                   Delivery Address
                 </h2>
@@ -835,9 +780,7 @@ function App() {
                     name="fullName"
                     placeholder="Full Name"
                     value={address.fullName}
-                    onChange={
-                      handleAddressChange
-                    }
+                    onChange={handleAddressChange}
                   />
 
                   <input
@@ -845,9 +788,7 @@ function App() {
                     name="mobile"
                     placeholder="Mobile Number"
                     value={address.mobile}
-                    onChange={
-                      handleAddressChange
-                    }
+                    onChange={handleAddressChange}
                   />
 
                   <input
@@ -855,18 +796,14 @@ function App() {
                     name="pincode"
                     placeholder="Pincode"
                     value={address.pincode}
-                    onChange={
-                      handleAddressChange
-                    }
+                    onChange={handleAddressChange}
                   />
 
                   <textarea
                     name="house"
                     placeholder="House No., Building, Street, Area"
                     value={address.house}
-                    onChange={
-                      handleAddressChange
-                    }
+                    onChange={handleAddressChange}
                   />
 
                   <input
@@ -874,9 +811,7 @@ function App() {
                     name="city"
                     placeholder="City"
                     value={address.city}
-                    onChange={
-                      handleAddressChange
-                    }
+                    onChange={handleAddressChange}
                   />
 
                   <input
@@ -884,29 +819,23 @@ function App() {
                     name="state"
                     placeholder="State"
                     value={address.state}
-                    onChange={
-                      handleAddressChange
-                    }
+                    onChange={handleAddressChange}
                   />
 
                   <button
                     className="continue-btn"
-                    onClick={
-                      continueToPayment
-                    }
+                    onClick={continueToPayment}
                   >
                     CONTINUE TO PAYMENT
                   </button>
 
                 </div>
-
               </>
             )}
 
             {checkoutType?.step ===
               "payment" && (
               <>
-
                 <h2 className="checkout-title">
                   Select Payment Method
                 </h2>
@@ -919,13 +848,10 @@ function App() {
                       type="radio"
                       name="payment"
                       checked={
-                        paymentMethod ===
-                        "cod"
+                        paymentMethod === "cod"
                       }
                       onChange={() =>
-                        setPaymentMethod(
-                          "cod"
-                        )
+                        setPaymentMethod("cod")
                       }
                     />
 
@@ -939,8 +865,7 @@ function App() {
                       type="radio"
                       name="payment"
                       checked={
-                        paymentMethod ===
-                        "online"
+                        paymentMethod === "online"
                       }
                       onChange={() =>
                         setPaymentMethod(
@@ -957,15 +882,12 @@ function App() {
 
                 <button
                   className="confirm-order-btn"
-                  onClick={
-                    confirmPayment
-                  }
+                  onClick={confirmPayment}
                 >
                   {paymentMethod === "cod"
                     ? "PLACE ORDER"
                     : "PAY & PLACE ORDER"}
                 </button>
-
               </>
             )}
 
@@ -995,12 +917,8 @@ function App() {
               <div className="details-image">
 
                 <img
-                  src={
-                    selectedProduct.image
-                  }
-                  alt={
-                    selectedProduct.name
-                  }
+                  src={selectedProduct.image}
+                  alt={selectedProduct.name}
                 />
 
               </div>
@@ -1010,9 +928,7 @@ function App() {
                 <button
                   className="details-cart-btn"
                   onClick={() =>
-                    addToCart(
-                      selectedProduct
-                    )
+                    addToCart(selectedProduct)
                   }
                 >
                   🛒 ADD TO CART
@@ -1021,9 +937,7 @@ function App() {
                 <button
                   className="buy-now-btn"
                   onClick={() =>
-                    buyNow(
-                      selectedProduct
-                    )
+                    buyNow(selectedProduct)
                   }
                 >
                   ⚡ BUY NOW
@@ -1041,9 +955,7 @@ function App() {
 
               <div className="product-rating">
 
-                <span>
-                  ⭐ 4.4
-                </span>
+                <span>⭐ 4.4</span>
 
                 <small>
                   1,245 Ratings
@@ -1101,92 +1013,89 @@ function App() {
             </p>
           ) : (
             <>
-              {cart.map(
-                (product) => {
+              {cart.map((product) => {
+                const subtotal =
+                  getPriceNumber(
+                    product.price
+                  ) * product.quantity;
 
-                  const subtotal =
-                    getPriceNumber(
-                      product.price
-                    ) *
-                    product.quantity;
+                return (
+                  <div
+                    className="cart-item"
+                    key={product.name}
+                  >
 
-                  return (
-                    <div
-                      className="cart-item"
-                      key={product.name}
-                    >
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                    />
 
-                      <img
-                        src={product.image}
-                        alt={product.name}
-                      />
+                    <div className="cart-product-info">
 
-                      <div className="cart-product-info">
+                      <h3>
+                        {product.name}
+                      </h3>
 
-                        <h3>
-                          {product.name}
-                        </h3>
+                      <p className="cart-price">
+                        {product.price}
+                      </p>
 
-                        <p className="cart-price">
-                          {product.price}
-                        </p>
+                      <div className="quantity-box">
 
-                        <div className="quantity-box">
+                        <button
+                          onClick={() =>
+                            decreaseQuantity(
+                              product.name
+                            )
+                          }
+                        >
+                          −
+                        </button>
 
-                          <button
-                            onClick={() =>
-                              decreaseQuantity(
-                                product.name
-                              )
-                            }
-                          >
-                            −
-                          </button>
+                        <span>
+                          {product.quantity}
+                        </span>
 
-                          <span>
-                            {product.quantity}
-                          </span>
-
-                          <button
-                            onClick={() =>
-                              increaseQuantity(
-                                product.name
-                              )
-                            }
-                          >
-                            +
-                          </button>
-
-                        </div>
-
-                        <p className="subtotal">
-                          Subtotal: ₹
-                          {subtotal.toLocaleString(
-                            "en-IN"
-                          )}
-                        </p>
+                        <button
+                          onClick={() =>
+                            increaseQuantity(
+                              product.name
+                            )
+                          }
+                        >
+                          +
+                        </button>
 
                       </div>
 
-                      <button
-                        className="remove-btn"
-                        onClick={() =>
-                          removeFromCart(
-                            product.name
-                          )
-                        }
-                      >
-                        Remove
-                      </button>
+                      <p className="subtotal">
+                        Subtotal: ₹
+                        {subtotal.toLocaleString(
+                          "en-IN"
+                        )}
+                      </p>
 
                     </div>
-                  );
-                }
-              )}
+
+                    <button
+                      className="remove-btn"
+                      onClick={() =>
+                        removeFromCart(
+                          product.name
+                        )
+                      }
+                    >
+                      Remove
+                    </button>
+
+                  </div>
+                );
+              })}
 
               <div className="cart-summary">
 
                 <div>
+
                   <span>
                     Total Items
                   </span>
@@ -1194,9 +1103,11 @@ function App() {
                   <strong>
                     {totalItems}
                   </strong>
+
                 </div>
 
                 <div>
+
                   <span>
                     Total Price
                   </span>
@@ -1207,6 +1118,7 @@ function App() {
                       "en-IN"
                     )}
                   </strong>
+
                 </div>
 
                 <button
@@ -1217,7 +1129,6 @@ function App() {
                 </button>
 
               </div>
-
             </>
           )}
 
@@ -1238,53 +1149,51 @@ function App() {
               Your wishlist is empty.
             </p>
           ) : (
-            wishlist.map(
-              (product) => (
-                <div
-                  className="wishlist-item"
-                  key={product.name}
-                >
+            wishlist.map((product) => (
+              <div
+                className="wishlist-item"
+                key={product.name}
+              >
 
-                  <img
-                    src={product.image}
-                    alt={product.name}
-                  />
+                <img
+                  src={product.image}
+                  alt={product.name}
+                />
 
-                  <div className="wishlist-product-info">
+                <div className="wishlist-product-info">
 
-                    <h3>
-                      {product.name}
-                    </h3>
+                  <h3>
+                    {product.name}
+                  </h3>
 
-                    <p>
-                      {product.price}
-                    </p>
-
-                    <button
-                      className="wishlist-cart-btn"
-                      onClick={() =>
-                        addToCart(product)
-                      }
-                    >
-                      Add to Cart
-                    </button>
-
-                  </div>
+                  <p>
+                    {product.price}
+                  </p>
 
                   <button
-                    className="remove-wishlist-btn"
+                    className="wishlist-cart-btn"
                     onClick={() =>
-                      removeFromWishlist(
-                        product.name
-                      )
+                      addToCart(product)
                     }
                   >
-                    Remove
+                    Add to Cart
                   </button>
 
                 </div>
-              )
-            )
+
+                <button
+                  className="remove-wishlist-btn"
+                  onClick={() =>
+                    removeFromWishlist(
+                      product.name
+                    )
+                  }
+                >
+                  Remove
+                </button>
+
+              </div>
+            ))
           )}
 
         </div>
@@ -1305,100 +1214,94 @@ function App() {
               orders yet.
             </p>
           ) : (
-            orders.map(
-              (order) => (
-                <div
-                  className="order-card"
-                  key={order.id}
-                >
+            orders.map((order) => (
+              <div
+                className="order-card"
+                key={order.id}
+              >
 
-                  <div className="order-header">
+                <div className="order-header">
+
+                  <div>
+
+                    <div className="order-date">
+                      Ordered on {order.date}
+                    </div>
+
+                    <div className="order-id">
+                      Order ID: {order.id}
+                    </div>
+
+                  </div>
+
+                  <div className="order-status">
+                    {order.status}
+                  </div>
+
+                </div>
+
+                {order.items.map((product) => (
+                  <div
+                    className="order-product"
+                    key={product.name}
+                  >
+
+                    <img
+                      src={product.image}
+                      alt={product.name}
+                    />
 
                     <div>
 
-                      <div className="order-date">
-                        Ordered on {order.date}
-                      </div>
+                      <h4>
+                        {product.name}
+                      </h4>
 
-                      <div className="order-id">
-                        Order ID: {order.id}
-                      </div>
+                      <p>
+                        {product.price}
+                      </p>
+
+                      <p>
+                        Quantity:{" "}
+                        {product.quantity}
+                      </p>
 
                     </div>
 
-                    <div className="order-status">
-                      {order.status}
-                    </div>
-
                   </div>
+                ))}
 
-                  {order.items.map(
-                    (product) => (
-                      <div
-                        className="order-product"
-                        key={product.name}
-                      >
+                <div className="order-total">
 
-                        <img
-                          src={product.image}
-                          alt={product.name}
-                        />
+                  <strong>
+                    Total
+                  </strong>
 
-                        <div>
-
-                          <h4>
-                            {product.name}
-                          </h4>
-
-                          <p>
-                            {product.price}
-                          </p>
-
-                          <p>
-                            Quantity:{" "}
-                            {product.quantity}
-                          </p>
-
-                        </div>
-
-                      </div>
-                    )
-                  )}
-
-                  <div className="order-total">
-
-                    <strong>
-                      Total
-                    </strong>
-
-                    <strong>
-                      ₹
-                      {order.totalPrice.toLocaleString(
-                        "en-IN"
-                      )}
-                    </strong>
-
-                  </div>
-
-                  <div className="order-payment">
-                    Payment:{" "}
-                    {order.paymentMethod}
-                  </div>
-
-                  <button
-                    className="cancel-order-btn"
-                    onClick={() =>
-                      cancelOrder(
-                        order.id
-                      )
-                    }
-                  >
-                    CANCEL ORDER
-                  </button>
+                  <strong>
+                    ₹
+                    {order.totalPrice.toLocaleString(
+                      "en-IN"
+                    )}
+                  </strong>
 
                 </div>
-              )
-            )
+
+                <div className="order-payment">
+                  Payment:{" "}
+                  {order.paymentMethod}
+                </div>
+
+                <button
+                  className="cancel-order-btn"
+                  onClick={() =>
+                    cancelOrder(order.id)
+                  }
+                >
+                  CANCEL ORDER
+                </button>
+
+              </div>
+            ))
           )}
 
         </div>
@@ -1408,26 +1311,21 @@ function App() {
 
       <div className="categories">
 
-        {categories.map(
-          (category) => (
-            <div
-              key={category}
-              className={`category ${
-                selectedCategory ===
-                category
-                  ? "active-category"
-                  : ""
-              }`}
-              onClick={() =>
-                setSelectedCategory(
-                  category
-                )
-              }
-            >
-              {category}
-            </div>
-          )
-        )}
+        {categories.map((category) => (
+          <div
+            key={category}
+            className={`category ${
+              selectedCategory === category
+                ? "active-category"
+                : ""
+            }`}
+            onClick={() =>
+              setSelectedCategory(category)
+            }
+          >
+            {category}
+          </div>
+        ))}
 
       </div>
 
@@ -1448,15 +1346,13 @@ function App() {
               (product) => (
                 <div
                   className="product-card"
-                  key={product.id}
+                  key={product.id || product.name}
                 >
 
                   <button
                     className="wishlist-heart"
                     onClick={() =>
-                      toggleWishlist(
-                        product
-                      )
+                      toggleWishlist(product)
                     }
                   >
                     {isInWishlist(

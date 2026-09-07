@@ -28,6 +28,8 @@ function App() {
   /* PRODUCTS */
 
   const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [productError, setProductError] = useState("");
 
   /* CART */
 
@@ -106,15 +108,21 @@ function App() {
   /* FETCH PRODUCTS */
 
   useEffect(() => {
-    fetch("https://flipkart-clone-backend-q6oy.onrender.com/products")
-      .then((response) => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        setProductError("");
+
+        const response = await fetch(
+          "https://flipkart-clone-backend-q6oy.onrender.com/products"
+        );
+
         if (!response.ok) {
           throw new Error("Failed to fetch products");
         }
 
-        return response.json();
-      })
-      .then((data) => {
+        const data = await response.json();
+
         const imageMap = {
           "Apple iPhone 15": appleIphone15,
           "Samsung Smartphone": samsungSmartphone,
@@ -202,17 +210,31 @@ function App() {
 
         const productsWithImages = data.map((product) => ({
           ...product,
-          image: imageMap[product.name],
+
+          image:
+            imageMap[product.name] || "",
+
           description:
             descriptionMap[product.name] ||
             "This is a high-quality product designed to provide reliable performance and a good user experience.",
         }));
 
         setProducts(productsWithImages);
-      })
-      .catch((error) => {
-        console.error("Error fetching products:", error);
-      });
+      } catch (error) {
+        console.error(
+          "Error fetching products:",
+          error
+        );
+
+        setProductError(
+          "Unable to load products. Please try again."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
   /* PRICE */
@@ -232,32 +254,44 @@ function App() {
 
   /* FILTER PRODUCTS */
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch = product.name
-      .toLowerCase()
-      .includes(search.toLowerCase());
+  const filteredProducts = products.filter(
+    (product) => {
+      const matchesSearch =
+        product.name
+          .toLowerCase()
+          .includes(search.toLowerCase());
 
-    const matchesCategory =
-      selectedCategory === "All" ||
-      product.category === selectedCategory;
+      const matchesCategory =
+        selectedCategory === "All" ||
+        product.category ===
+          selectedCategory;
 
-    return matchesSearch && matchesCategory;
-  });
+      return (
+        matchesSearch &&
+        matchesCategory
+      );
+    }
+  );
 
   /* ADD TO CART */
 
   const addToCart = (product) => {
-    const existingProduct = cart.find(
-      (item) => item.name === product.name
-    );
+    const existingProduct =
+      cart.find(
+        (item) =>
+          item.name ===
+          product.name
+      );
 
     if (existingProduct) {
       setCart(
         cart.map((item) =>
-          item.name === product.name
+          item.name ===
+          product.name
             ? {
                 ...item,
-                quantity: item.quantity + 1,
+                quantity:
+                  item.quantity + 1,
               }
             : item
         )
@@ -275,35 +309,49 @@ function App() {
 
   /* QUANTITY */
 
-  const increaseQuantity = (productName) => {
+  const increaseQuantity = (
+    productName
+  ) => {
     setCart(
       cart.map((item) =>
         item.name === productName
           ? {
               ...item,
-              quantity: item.quantity + 1,
+              quantity:
+                item.quantity + 1,
             }
           : item
       )
     );
   };
 
-  const decreaseQuantity = (productName) => {
-    const product = cart.find(
-      (item) => item.name === productName
-    );
+  const decreaseQuantity = (
+    productName
+  ) => {
+    const product =
+      cart.find(
+        (item) =>
+          item.name ===
+          productName
+      );
 
     if (!product) return;
 
-    if (product.quantity === 1) {
-      removeFromCart(productName);
+    if (
+      product.quantity === 1
+    ) {
+      removeFromCart(
+        productName
+      );
     } else {
       setCart(
         cart.map((item) =>
-          item.name === productName
+          item.name ===
+          productName
             ? {
                 ...item,
-                quantity: item.quantity - 1,
+                quantity:
+                  item.quantity - 1,
               }
             : item
         )
@@ -311,41 +359,57 @@ function App() {
     }
   };
 
-  const removeFromCart = (productName) => {
+  const removeFromCart = (
+    productName
+  ) => {
     setCart(
       cart.filter(
-        (item) => item.name !== productName
+        (item) =>
+          item.name !==
+          productName
       )
     );
   };
 
   /* CART TOTAL */
 
-  const totalPrice = cart.reduce(
-    (total, item) =>
-      total +
-      getPriceNumber(item.price) *
-        item.quantity,
-    0
-  );
+  const totalPrice =
+    cart.reduce(
+      (total, item) =>
+        total +
+        getPriceNumber(
+          item.price
+        ) *
+          item.quantity,
+      0
+    );
 
-  const totalItems = cart.reduce(
-    (total, item) =>
-      total + item.quantity,
-    0
-  );
+  const totalItems =
+    cart.reduce(
+      (total, item) =>
+        total +
+        item.quantity,
+      0
+    );
 
   /* WISHLIST */
 
-  const toggleWishlist = (product) => {
-    const exists = wishlist.some(
-      (item) => item.name === product.name
-    );
+  const toggleWishlist = (
+    product
+  ) => {
+    const exists =
+      wishlist.some(
+        (item) =>
+          item.name ===
+          product.name
+      );
 
     if (exists) {
       setWishlist(
         wishlist.filter(
-          (item) => item.name !== product.name
+          (item) =>
+            item.name !==
+            product.name
         )
       );
     } else {
@@ -356,16 +420,23 @@ function App() {
     }
   };
 
-  const isInWishlist = (productName) => {
+  const isInWishlist = (
+    productName
+  ) => {
     return wishlist.some(
-      (item) => item.name === productName
+      (item) =>
+        item.name === productName
     );
   };
 
-  const removeFromWishlist = (productName) => {
+  const removeFromWishlist = (
+    productName
+  ) => {
     setWishlist(
       wishlist.filter(
-        (item) => item.name !== productName
+        (item) =>
+          item.name !==
+          productName
       )
     );
   };
@@ -386,7 +457,9 @@ function App() {
       setEmail("");
       setPassword("");
     } else {
-      alert("Please enter email and password");
+      alert(
+        "Please enter email and password"
+      );
     }
   };
 
@@ -423,7 +496,9 @@ function App() {
     }
 
     if (cart.length === 0) {
-      alert("Your cart is empty");
+      alert(
+        "Your cart is empty"
+      );
       return;
     }
 
@@ -439,8 +514,13 @@ function App() {
 
   /* ADDRESS */
 
-  const handleAddressChange = (e) => {
-    const { name, value } = e.target;
+  const handleAddressChange = (
+    e
+  ) => {
+    const {
+      name,
+      value,
+    } = e.target;
 
     setAddress({
       ...address,
@@ -450,20 +530,31 @@ function App() {
 
   const continueToPayment = () => {
     if (
-      address.fullName.trim() === "" ||
-      address.mobile.trim() === "" ||
-      address.pincode.trim() === "" ||
-      address.house.trim() === "" ||
-      address.city.trim() === "" ||
-      address.state.trim() === ""
+      address.fullName.trim() ===
+        "" ||
+      address.mobile.trim() ===
+        "" ||
+      address.pincode.trim() ===
+        "" ||
+      address.house.trim() ===
+        "" ||
+      address.city.trim() ===
+        "" ||
+      address.state.trim() ===
+        ""
     ) {
-      alert("Please fill all address details");
+      alert(
+        "Please fill all address details"
+      );
       return;
     }
 
     if (
-      address.mobile.length !== 10 ||
-      !/^\d+$/.test(address.mobile)
+      address.mobile.length !==
+        10 ||
+      !/^\d+$/.test(
+        address.mobile
+      )
     ) {
       alert(
         "Please enter a valid 10 digit mobile number"
@@ -472,8 +563,11 @@ function App() {
     }
 
     if (
-      address.pincode.length !== 6 ||
-      !/^\d+$/.test(address.pincode)
+      address.pincode.length !==
+        6 ||
+      !/^\d+$/.test(
+        address.pincode
+      )
     ) {
       alert(
         "Please enter a valid 6 digit pincode"
@@ -490,8 +584,12 @@ function App() {
   /* CONFIRM PAYMENT */
 
   const confirmPayment = () => {
-    if (paymentMethod === "") {
-      alert("Please select a payment method");
+    if (
+      paymentMethod === ""
+    ) {
+      alert(
+        "Please select a payment method"
+      );
       return;
     }
 
@@ -499,13 +597,21 @@ function App() {
     let finalTotal = 0;
     let finalItems = 0;
 
-    if (checkoutType.type === "cart") {
+    if (
+      checkoutType.type ===
+      "cart"
+    ) {
       orderItems = [...cart];
-      finalTotal = totalPrice;
-      finalItems = totalItems;
+      finalTotal =
+        totalPrice;
+      finalItems =
+        totalItems;
     }
 
-    if (checkoutType.type === "buyNow") {
+    if (
+      checkoutType.type ===
+      "buyNow"
+    ) {
       orderItems = [
         {
           ...checkoutType.product,
@@ -513,9 +619,11 @@ function App() {
         },
       ];
 
-      finalTotal = getPriceNumber(
-        checkoutType.product.price
-      );
+      finalTotal =
+        getPriceNumber(
+          checkoutType.product
+            .price
+        );
 
       finalItems = 1;
     }
@@ -525,16 +633,19 @@ function App() {
 
       items: orderItems,
 
-      totalItems: finalItems,
+      totalItems:
+        finalItems,
 
-      totalPrice: finalTotal,
+      totalPrice:
+        finalTotal,
 
       address: {
         ...address,
       },
 
       paymentMethod:
-        paymentMethod === "cod"
+        paymentMethod ===
+        "cod"
           ? "Cash on Delivery"
           : "Online Payment",
 
@@ -547,15 +658,21 @@ function App() {
         }
       ),
 
-      status: "Order Placed",
+      status:
+        "Order Placed",
     };
 
-    setOrders((previousOrders) => [
-      newOrder,
-      ...previousOrders,
-    ]);
+    setOrders(
+      (previousOrders) => [
+        newOrder,
+        ...previousOrders,
+      ]
+    );
 
-    if (checkoutType.type === "cart") {
+    if (
+      checkoutType.type ===
+      "cart"
+    ) {
       setCart([]);
     }
 
@@ -582,10 +699,13 @@ function App() {
 
   /* CANCEL ORDER */
 
-  const cancelOrder = (orderId) => {
+  const cancelOrder = (
+    orderId
+  ) => {
     setOrders(
       orders.filter(
-        (order) => order.id !== orderId
+        (order) =>
+          order.id !== orderId
       )
     );
 
@@ -606,7 +726,8 @@ function App() {
       <nav className="navbar">
 
         <div className="logo">
-          Flipkart <span>Clone</span>
+          Flipkart{" "}
+          <span>Clone</span>
         </div>
 
         <input
@@ -615,7 +736,9 @@ function App() {
           placeholder="Search for products, brands and more"
           value={search}
           onChange={(e) =>
-            setSearch(e.target.value)
+            setSearch(
+              e.target.value
+            )
           }
         />
 
@@ -630,7 +753,9 @@ function App() {
           <button
             className="login-btn"
             onClick={() =>
-              setShowLogin(true)
+              setShowLogin(
+                true
+              )
             }
           >
             Login
@@ -640,34 +765,47 @@ function App() {
         <button
           className="wishlist-nav"
           onClick={() => {
-            setShowWishlist(!showWishlist);
+            setShowWishlist(
+              !showWishlist
+            );
             setShowCart(false);
             setShowOrders(false);
           }}
         >
-          ❤️ Wishlist ({wishlist.length})
+          ❤️ Wishlist (
+          {wishlist.length})
         </button>
 
         <button
           className="orders-nav"
           onClick={() => {
-            setShowOrders(!showOrders);
+            setShowOrders(
+              !showOrders
+            );
             setShowCart(false);
-            setShowWishlist(false);
+            setShowWishlist(
+              false
+            );
           }}
         >
-          📦 My Orders ({orders.length})
+          📦 My Orders (
+          {orders.length})
         </button>
 
         <button
           className="cart"
           onClick={() => {
-            setShowCart(!showCart);
-            setShowWishlist(false);
+            setShowCart(
+              !showCart
+            );
+            setShowWishlist(
+              false
+            );
             setShowOrders(false);
           }}
         >
-          🛒 Cart ({totalItems})
+          🛒 Cart (
+          {totalItems})
         </button>
 
       </nav>
@@ -694,7 +832,9 @@ function App() {
             <button
               className="close-btn"
               onClick={() =>
-                setShowLogin(false)
+                setShowLogin(
+                  false
+                )
               }
             >
               ×
@@ -702,25 +842,34 @@ function App() {
 
             <div className="login-left">
 
-              <h2>Login</h2>
+              <h2>
+                Login
+              </h2>
 
               <p>
-                Get access to your Orders,
-                Wishlist and Recommendations
+                Get access to your
+                Orders, Wishlist and
+                Recommendations
               </p>
 
             </div>
 
             <div className="login-right">
 
-              <form onSubmit={handleLogin}>
+              <form
+                onSubmit={
+                  handleLogin
+                }
+              >
 
                 <input
                   type="email"
                   placeholder="Enter Email"
                   value={email}
                   onChange={(e) =>
-                    setEmail(e.target.value)
+                    setEmail(
+                      e.target.value
+                    )
                   }
                 />
 
@@ -729,7 +878,9 @@ function App() {
                   placeholder="Enter Password"
                   value={password}
                   onChange={(e) =>
-                    setPassword(e.target.value)
+                    setPassword(
+                      e.target.value
+                    )
                   }
                 />
 
@@ -759,8 +910,12 @@ function App() {
             <button
               className="close-btn"
               onClick={() => {
-                setShowCheckout(false);
-                setPaymentMethod("");
+                setShowCheckout(
+                  false
+                );
+                setPaymentMethod(
+                  ""
+                );
               }}
             >
               ×
@@ -779,52 +934,78 @@ function App() {
                     type="text"
                     name="fullName"
                     placeholder="Full Name"
-                    value={address.fullName}
-                    onChange={handleAddressChange}
+                    value={
+                      address.fullName
+                    }
+                    onChange={
+                      handleAddressChange
+                    }
                   />
 
                   <input
                     type="tel"
                     name="mobile"
                     placeholder="Mobile Number"
-                    value={address.mobile}
-                    onChange={handleAddressChange}
+                    value={
+                      address.mobile
+                    }
+                    onChange={
+                      handleAddressChange
+                    }
                   />
 
                   <input
                     type="text"
                     name="pincode"
                     placeholder="Pincode"
-                    value={address.pincode}
-                    onChange={handleAddressChange}
+                    value={
+                      address.pincode
+                    }
+                    onChange={
+                      handleAddressChange
+                    }
                   />
 
                   <textarea
                     name="house"
                     placeholder="House No., Building, Street, Area"
-                    value={address.house}
-                    onChange={handleAddressChange}
+                    value={
+                      address.house
+                    }
+                    onChange={
+                      handleAddressChange
+                    }
                   />
 
                   <input
                     type="text"
                     name="city"
                     placeholder="City"
-                    value={address.city}
-                    onChange={handleAddressChange}
+                    value={
+                      address.city
+                    }
+                    onChange={
+                      handleAddressChange
+                    }
                   />
 
                   <input
                     type="text"
                     name="state"
                     placeholder="State"
-                    value={address.state}
-                    onChange={handleAddressChange}
+                    value={
+                      address.state
+                    }
+                    onChange={
+                      handleAddressChange
+                    }
                   />
 
                   <button
                     className="continue-btn"
-                    onClick={continueToPayment}
+                    onClick={
+                      continueToPayment
+                    }
                   >
                     CONTINUE TO PAYMENT
                   </button>
@@ -848,10 +1029,13 @@ function App() {
                       type="radio"
                       name="payment"
                       checked={
-                        paymentMethod === "cod"
+                        paymentMethod ===
+                        "cod"
                       }
                       onChange={() =>
-                        setPaymentMethod("cod")
+                        setPaymentMethod(
+                          "cod"
+                        )
                       }
                     />
 
@@ -865,7 +1049,8 @@ function App() {
                       type="radio"
                       name="payment"
                       checked={
-                        paymentMethod === "online"
+                        paymentMethod ===
+                        "online"
                       }
                       onChange={() =>
                         setPaymentMethod(
@@ -882,9 +1067,12 @@ function App() {
 
                 <button
                   className="confirm-order-btn"
-                  onClick={confirmPayment}
+                  onClick={
+                    confirmPayment
+                  }
                 >
-                  {paymentMethod === "cod"
+                  {paymentMethod ===
+                  "cod"
                     ? "PLACE ORDER"
                     : "PAY & PLACE ORDER"}
                 </button>
@@ -906,7 +1094,9 @@ function App() {
             <button
               className="close-btn"
               onClick={() =>
-                setSelectedProduct(null)
+                setSelectedProduct(
+                  null
+                )
               }
             >
               ×
@@ -917,8 +1107,12 @@ function App() {
               <div className="details-image">
 
                 <img
-                  src={selectedProduct.image}
-                  alt={selectedProduct.name}
+                  src={
+                    selectedProduct.image
+                  }
+                  alt={
+                    selectedProduct.name
+                  }
                 />
 
               </div>
@@ -928,7 +1122,9 @@ function App() {
                 <button
                   className="details-cart-btn"
                   onClick={() =>
-                    addToCart(selectedProduct)
+                    addToCart(
+                      selectedProduct
+                    )
                   }
                 >
                   🛒 ADD TO CART
@@ -937,7 +1133,9 @@ function App() {
                 <button
                   className="buy-now-btn"
                   onClick={() =>
-                    buyNow(selectedProduct)
+                    buyNow(
+                      selectedProduct
+                    )
                   }
                 >
                   ⚡ BUY NOW
@@ -950,12 +1148,16 @@ function App() {
             <div className="details-info">
 
               <h1 className="product-title">
-                {selectedProduct.name}
+                {
+                  selectedProduct.name
+                }
               </h1>
 
               <div className="product-rating">
 
-                <span>⭐ 4.4</span>
+                <span>
+                  ⭐ 4.4
+                </span>
 
                 <small>
                   1,245 Ratings
@@ -964,7 +1166,9 @@ function App() {
               </div>
 
               <h2 className="details-price">
-                {selectedProduct.price}
+                {
+                  selectedProduct.price
+                }
               </h2>
 
               <div className="product-info-row">
@@ -974,7 +1178,9 @@ function App() {
                 </div>
 
                 <div>
-                  {selectedProduct.category}
+                  {
+                    selectedProduct.category
+                  }
                 </div>
 
               </div>
@@ -988,7 +1194,9 @@ function App() {
                 </div>
 
                 <div>
-                  {selectedProduct.description}
+                  {
+                    selectedProduct.description
+                  }
                 </div>
 
               </div>
@@ -1005,7 +1213,9 @@ function App() {
       {showCart && (
         <div className="cart-section">
 
-          <h2>Your Cart</h2>
+          <h2>
+            Your Cart
+          </h2>
 
           {cart.length === 0 ? (
             <p className="empty-cart">
@@ -1013,84 +1223,99 @@ function App() {
             </p>
           ) : (
             <>
-              {cart.map((product) => {
-                const subtotal =
-                  getPriceNumber(
-                    product.price
-                  ) * product.quantity;
+              {cart.map(
+                (product) => {
+                  const subtotal =
+                    getPriceNumber(
+                      product.price
+                    ) *
+                    product.quantity;
 
-                return (
-                  <div
-                    className="cart-item"
-                    key={product.name}
-                  >
+                  return (
+                    <div
+                      className="cart-item"
+                      key={
+                        product.name
+                      }
+                    >
 
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                    />
+                      <img
+                        src={
+                          product.image
+                        }
+                        alt={
+                          product.name
+                        }
+                      />
 
-                    <div className="cart-product-info">
+                      <div className="cart-product-info">
 
-                      <h3>
-                        {product.name}
-                      </h3>
-
-                      <p className="cart-price">
-                        {product.price}
-                      </p>
-
-                      <div className="quantity-box">
-
-                        <button
-                          onClick={() =>
-                            decreaseQuantity(
-                              product.name
-                            )
+                        <h3>
+                          {
+                            product.name
                           }
-                        >
-                          −
-                        </button>
+                        </h3>
 
-                        <span>
-                          {product.quantity}
-                        </span>
-
-                        <button
-                          onClick={() =>
-                            increaseQuantity(
-                              product.name
-                            )
+                        <p className="cart-price">
+                          {
+                            product.price
                           }
-                        >
-                          +
-                        </button>
+                        </p>
+
+                        <div className="quantity-box">
+
+                          <button
+                            onClick={() =>
+                              decreaseQuantity(
+                                product.name
+                              )
+                            }
+                          >
+                            −
+                          </button>
+
+                          <span>
+                            {
+                              product.quantity
+                            }
+                          </span>
+
+                          <button
+                            onClick={() =>
+                              increaseQuantity(
+                                product.name
+                              )
+                            }
+                          >
+                            +
+                          </button>
+
+                        </div>
+
+                        <p className="subtotal">
+                          Subtotal: ₹
+                          {subtotal.toLocaleString(
+                            "en-IN"
+                          )}
+                        </p>
 
                       </div>
 
-                      <p className="subtotal">
-                        Subtotal: ₹
-                        {subtotal.toLocaleString(
-                          "en-IN"
-                        )}
-                      </p>
+                      <button
+                        className="remove-btn"
+                        onClick={() =>
+                          removeFromCart(
+                            product.name
+                          )
+                        }
+                      >
+                        Remove
+                      </button>
 
                     </div>
-
-                    <button
-                      className="remove-btn"
-                      onClick={() =>
-                        removeFromCart(
-                          product.name
-                        )
-                      }
-                    >
-                      Remove
-                    </button>
-
-                  </div>
-                );
-              })}
+                  );
+                }
+              )}
 
               <div className="cart-summary">
 
@@ -1123,7 +1348,9 @@ function App() {
 
                 <button
                   className="place-order-btn"
-                  onClick={placeOrder}
+                  onClick={
+                    placeOrder
+                  }
                 >
                   🛍️ PLACE ORDER
                 </button>
@@ -1144,56 +1371,72 @@ function App() {
             My Wishlist ❤️
           </h2>
 
-          {wishlist.length === 0 ? (
+          {wishlist.length ===
+          0 ? (
             <p>
-              Your wishlist is empty.
+              Your wishlist is
+              empty.
             </p>
           ) : (
-            wishlist.map((product) => (
-              <div
-                className="wishlist-item"
-                key={product.name}
-              >
+            wishlist.map(
+              (product) => (
+                <div
+                  className="wishlist-item"
+                  key={
+                    product.name
+                  }
+                >
 
-                <img
-                  src={product.image}
-                  alt={product.name}
-                />
+                  <img
+                    src={
+                      product.image
+                    }
+                    alt={
+                      product.name
+                    }
+                  />
 
-                <div className="wishlist-product-info">
+                  <div className="wishlist-product-info">
 
-                  <h3>
-                    {product.name}
-                  </h3>
+                    <h3>
+                      {
+                        product.name
+                      }
+                    </h3>
 
-                  <p>
-                    {product.price}
-                  </p>
+                    <p>
+                      {
+                        product.price
+                      }
+                    </p>
+
+                    <button
+                      className="wishlist-cart-btn"
+                      onClick={() =>
+                        addToCart(
+                          product
+                        )
+                      }
+                    >
+                      Add to Cart
+                    </button>
+
+                  </div>
 
                   <button
-                    className="wishlist-cart-btn"
+                    className="remove-wishlist-btn"
                     onClick={() =>
-                      addToCart(product)
+                      removeFromWishlist(
+                        product.name
+                      )
                     }
                   >
-                    Add to Cart
+                    Remove
                   </button>
 
                 </div>
-
-                <button
-                  className="remove-wishlist-btn"
-                  onClick={() =>
-                    removeFromWishlist(
-                      product.name
-                    )
-                  }
-                >
-                  Remove
-                </button>
-
-              </div>
-            ))
+              )
+            )
           )}
 
         </div>
@@ -1208,100 +1451,125 @@ function App() {
             My Orders 📦
           </h2>
 
-          {orders.length === 0 ? (
+          {orders.length ===
+          0 ? (
             <p>
-              You have not placed any
-              orders yet.
+              You have not placed
+              any orders yet.
             </p>
           ) : (
-            orders.map((order) => (
-              <div
-                className="order-card"
-                key={order.id}
-              >
+            orders.map(
+              (order) => (
+                <div
+                  className="order-card"
+                  key={order.id}
+                >
 
-                <div className="order-header">
-
-                  <div>
-
-                    <div className="order-date">
-                      Ordered on {order.date}
-                    </div>
-
-                    <div className="order-id">
-                      Order ID: {order.id}
-                    </div>
-
-                  </div>
-
-                  <div className="order-status">
-                    {order.status}
-                  </div>
-
-                </div>
-
-                {order.items.map((product) => (
-                  <div
-                    className="order-product"
-                    key={product.name}
-                  >
-
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                    />
+                  <div className="order-header">
 
                     <div>
 
-                      <h4>
-                        {product.name}
-                      </h4>
+                      <div className="order-date">
+                        Ordered on{" "}
+                        {order.date}
+                      </div>
 
-                      <p>
-                        {product.price}
-                      </p>
-
-                      <p>
-                        Quantity:{" "}
-                        {product.quantity}
-                      </p>
+                      <div className="order-id">
+                        Order ID:{" "}
+                        {order.id}
+                      </div>
 
                     </div>
 
+                    <div className="order-status">
+                      {
+                        order.status
+                      }
+                    </div>
+
                   </div>
-                ))}
 
-                <div className="order-total">
+                  {order.items.map(
+                    (product) => (
+                      <div
+                        className="order-product"
+                        key={
+                          product.name
+                        }
+                      >
 
-                  <strong>
-                    Total
-                  </strong>
+                        <img
+                          src={
+                            product.image
+                          }
+                          alt={
+                            product.name
+                          }
+                        />
 
-                  <strong>
-                    ₹
-                    {order.totalPrice.toLocaleString(
-                      "en-IN"
-                    )}
-                  </strong>
+                        <div>
+
+                          <h4>
+                            {
+                              product.name
+                            }
+                          </h4>
+
+                          <p>
+                            {
+                              product.price
+                            }
+                          </p>
+
+                          <p>
+                            Quantity:{" "}
+                            {
+                              product.quantity
+                            }
+                          </p>
+
+                        </div>
+
+                      </div>
+                    )
+                  )}
+
+                  <div className="order-total">
+
+                    <strong>
+                      Total
+                    </strong>
+
+                    <strong>
+                      ₹
+                      {order.totalPrice.toLocaleString(
+                        "en-IN"
+                      )}
+                    </strong>
+
+                  </div>
+
+                  <div className="order-payment">
+                    Payment:{" "}
+                    {
+                      order.paymentMethod
+                    }
+                  </div>
+
+                  <button
+                    className="cancel-order-btn"
+                    onClick={() =>
+                      cancelOrder(
+                        order.id
+                      )
+                    }
+                  >
+                    CANCEL ORDER
+                  </button>
 
                 </div>
-
-                <div className="order-payment">
-                  Payment:{" "}
-                  {order.paymentMethod}
-                </div>
-
-                <button
-                  className="cancel-order-btn"
-                  onClick={() =>
-                    cancelOrder(order.id)
-                  }
-                >
-                  CANCEL ORDER
-                </button>
-
-              </div>
-            ))
+              )
+            )
           )}
 
         </div>
@@ -1311,21 +1579,26 @@ function App() {
 
       <div className="categories">
 
-        {categories.map((category) => (
-          <div
-            key={category}
-            className={`category ${
-              selectedCategory === category
-                ? "active-category"
-                : ""
-            }`}
-            onClick={() =>
-              setSelectedCategory(category)
-            }
-          >
-            {category}
-          </div>
-        ))}
+        {categories.map(
+          (category) => (
+            <div
+              key={category}
+              className={`category ${
+                selectedCategory ===
+                category
+                  ? "active-category"
+                  : ""
+              }`}
+              onClick={() =>
+                setSelectedCategory(
+                  category
+                )
+              }
+            >
+              {category}
+            </div>
+          )
+        )}
 
       </div>
 
@@ -1334,25 +1607,40 @@ function App() {
       <section className="products-section">
 
         <h2>
-          {selectedCategory === "All"
+          {selectedCategory ===
+          "All"
             ? "Best Deals on Top Products"
             : selectedCategory}
         </h2>
 
         <div className="products">
 
-          {filteredProducts.length > 0 ? (
+          {loading ? (
+            <h3 className="no-product">
+              Loading products...
+            </h3>
+          ) : productError ? (
+            <h3 className="no-product">
+              {productError}
+            </h3>
+          ) : filteredProducts.length >
+            0 ? (
             filteredProducts.map(
               (product) => (
                 <div
                   className="product-card"
-                  key={product.id || product.name}
+                  key={
+                    product.id ||
+                    product.name
+                  }
                 >
 
                   <button
                     className="wishlist-heart"
                     onClick={() =>
-                      toggleWishlist(product)
+                      toggleWishlist(
+                        product
+                      )
                     }
                   >
                     {isInWishlist(
@@ -1363,8 +1651,12 @@ function App() {
                   </button>
 
                   <img
-                    src={product.image}
-                    alt={product.name}
+                    src={
+                      product.image
+                    }
+                    alt={
+                      product.name
+                    }
                     className="product-image"
                     onClick={() =>
                       setSelectedProduct(
@@ -1383,7 +1675,9 @@ function App() {
 
                   <button
                     onClick={() =>
-                      addToCart(product)
+                      addToCart(
+                        product
+                      )
                     }
                   >
                     Add to Cart
